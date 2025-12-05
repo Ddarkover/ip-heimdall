@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IP Heimdall - Определитель IP-адресов</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header>
+            <div class="logo">
+                <div class="logo-icon">👁️</div>
+                <div>
+                    <h1>IP HEIMDALL</h1>
+                    <p class="subtitle">Определитель IP-адресов и геолокации</p>
+                </div>
+            </div>
+        </header>
+
+        <!-- Search Section -->
+        <div class="search-section">
+            <div class="search-box">
+                <input 
+                    type="text" 
+                    id="ipInput" 
+                    placeholder="Введите IP-адрес (например: 91.224.74.173)"
+                >
+                <button class="btn-primary" id="searchBtn">Найти</button>
+                <button class="btn-secondary" id="myIpBtn">Мой IP</button>
+            </div>
+            <div class="error" id="errorMsg"></div>
+            <div class="spinner" id="spinner"></div>
+        </div>
+
+        <!-- Results -->
+        <div class="results" id="results">
+            <!-- Main Card -->
+            <div class="main-card">
+                <div class="main-info">
+                    <h2 id="mainIp">—</h2>
+                    <div class="location-info">
+                        <div class="flag" id="countryFlag">🌐</div>
+                        <div class="location-details">
+                            <h3 id="countryName">—</h3>
+                            <p id="cityInfo">—</p>
+                            <span class="country-code" id="countryCode">—</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Geography Grid -->
+            <div class="grid">
+                <div class="card">
+                    <div class="card-title">📍 Континент</div>
+                    <div class="card-value" id="continent">—</div>
+                    <div class="card-subtext" id="continentCode">—</div>
+                </div>
+                <div class="card">
+                    <div class="card-title">🕐 Часовой пояс</div>
+                    <div class="card-value" id="timezone">—</div>
+                    <div class="card-subtext" id="currentTime">—</div>
+                </div>
+                <div class="card">
+                    <div class="card-title">📮 Почтовый индекс</div>
+                    <div class="card-value" id="postal">—</div>
+                    <div class="card-subtext">ZIP код</div>
+                </div>
+            </div>
+
+            <!-- Coordinates & Network -->
+            <div class="grid">
+                <div class="card">
+                    <div class="card-title">🗺️ Координаты</div>
+                    <div class="card-value" id="coords">—</div>
+                    <div class="card-subtext">Широта, долгота</div>
+                </div>
+                <div class="card">
+                    <div class="card-title">🌐 Тип IP</div>
+                    <div class="card-value" id="ipType">—</div>
+                    <div class="card-subtext" id="typeStatus">—</div>
+                </div>
+                <div class="card">
+                    <div class="card-title">☎️ Код страны</div>
+                    <div class="card-value" id="callingCode">—</div>
+                    <div class="card-subtext">Международный код</div>
+                </div>
+            </div>
+
+            <!-- Network Info -->
+            <div class="grid">
+                <div class="card">
+                    <div class="card-title">🔗 ASN</div>
+                    <div class="card-value" id="asn">—</div>
+                    <div class="card-subtext">Автономная система</div>
+                </div>
+                <div class="card">
+                    <div class="card-title">🏢 Организация</div>
+                    <div class="card-value" id="org">—</div>
+                    <div class="card-subtext" id="domain">—</div>
+                </div>
+                <div class="card">
+                    <div class="card-title">📡 ISP</div>
+                    <div class="card-value" id="isp">—</div>
+                    <div class="card-subtext">Интернет провайдер</div>
+                </div>
+            </div>
+
+            <!-- Security Info -->
+            <div class="card">
+                <div class="card-title">🔒 Информация безопасности</div>
+                <div id="securityBadges" style="margin-top: 10px;"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
