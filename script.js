@@ -130,8 +130,8 @@ function displaySecurityInfo(data) {
         { label: 'Tor', value: data.is_tor, type: data.is_tor ? 'danger' : 'no' },
         { label: 'Datacenter', value: data.is_datacenter, type: data.is_datacenter ? 'warn' : 'no' },
         { label: 'Bot/Crawler', value: data.is_crawler, type: data.is_crawler ? 'warn' : 'no' },
-        { label: 'Мобильный', value: data.is_mobile, type: data.is_mobile ? 'yes' : 'no' },
-        { label: 'Спутник', value: data.is_satellite, type: data.is_satellite ? 'warn' : 'no' },
+        { label: 'Mobile', value: data.is_mobile, type: data.is_mobile ? 'yes' : 'no' },
+        { label: 'Satellite', value: data.is_satellite, type: data.is_satellite ? 'warn' : 'no' },
         { label: 'Abuser', value: data.is_abuser, type: data.is_abuser ? 'danger' : 'yes' }
     ];
 
