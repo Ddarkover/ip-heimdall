@@ -38,6 +38,7 @@
 ip-heimdall/
 ├── index.html          # HTML структура приложения
 ├── style.css           # CSS стили (тёмная тема, анимации)
+├── favicon.ico         # favicon.ico
 ├── script.js           # JavaScript логика и API интеграция
 └── README.md           # Этот файл
 ```
