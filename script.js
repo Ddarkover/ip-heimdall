@@ -137,7 +137,7 @@ function displaySecurityInfo(data) {
 
     elements.securityBadges.innerHTML = badges
         .map(b => `<span class="badge badge-${b.value ? (b.type === 'yes' ? 'yes' : b.type) : 'no'}">
-            ${b.label}: ${b.value ? 'ДА' : 'НЕТ'}
+            ${b.label}: ${b.value ? 'Yes' : 'No'}
         </span>`)
         .join('');
 }
