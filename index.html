@@ -22,21 +22,24 @@
 
         <!-- Search Section -->
         <div class="search-section">
-            <div class="search-box">
-                <input 
-                    type="text" 
-                    id="ipInput" 
+            <form class="search-box" id="searchForm" novalidate>
+                <label class="sr-only" for="ipInput">IP-адрес</label>
+                <input
+                    type="text"
+                    id="ipInput"
+                    autocomplete="off"
+                    spellcheck="false"
                     placeholder="Введите IP-адрес (например: 91.224.74.173)"
                 >
-                <button class="btn-primary" id="searchBtn">Найти</button>
-                <button class="btn-secondary" id="myIpBtn">Мой IP</button>
-            </div>
-            <div class="error" id="errorMsg"></div>
-            <div class="spinner" id="spinner"></div>
+                <button type="submit" class="btn-primary" id="searchBtn">Найти</button>
+                <button type="button" class="btn-secondary" id="myIpBtn">Мой IP</button>
+            </form>
+            <div class="error" id="errorMsg" role="alert" aria-live="polite"></div>
+            <div class="spinner" id="spinner" aria-live="polite"></div>
         </div>
 
         <!-- Results -->
-        <div class="results" id="results">
+        <div class="results" id="results" aria-live="polite">
             <!-- Main Card -->
             <div class="main-card">
                 <div class="main-info">
