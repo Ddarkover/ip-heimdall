@@ -27,6 +27,16 @@ const elements = {
     securityBadges: document.getElementById('securityBadges')
 };
 
+const continentNames = {
+    AF: 'Africa',
+    AN: 'Antarctica',
+    AS: 'Asia',
+    EU: 'Europe',
+    NA: 'North America',
+    OC: 'Oceania',
+    SA: 'South America'
+};
+
 let activeRequestId = 0;
 
 function isValidIPv4(ip) {
@@ -71,39 +81,179 @@ function setLoading(isLoading) {
     elements.ipInput.disabled = isLoading;
 }
 
+function getCountryFlag(countryCode) {
+    if (!countryCode || countryCode.length !== 2) {
+        return '🌐';
+    }
+
+    return countryCode
+        .toUpperCase()
+        .split('')
+        .map((char) => String.fromCodePoint(char.charCodeAt(0) + 127397))
+        .join('');
+}
+
+function getTimeForTimezone(timezone) {
+    if (!timezone) {
+        return '—';
+    }
+
+    try {
+        return new Intl.DateTimeFormat('ru-RU', {
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: false,
+            timeZone: timezone
+        }).format(new Date());
+    } catch {
+        return '—';
+    }
+}
+
+async function fetchJson(url) {
+    const response = await fetch(url);
+    if (!response.ok) {
+        throw new Error(`Request failed: ${response.status}`);
+    }
+
+    return response.json();
+}
+
+function normalizeIpwhoisApp(data) {
+    return {
+        ip: data.ip,
+        flag: { emoji: data.country_flag_emoji || getCountryFlag(data.country_code) },
+        country: data.country,
+        city: data.city,
+        region: data.region,
+        country_code: data.country_code,
+        continent: data.continent,
+        continent_code: data.continent_code,
+        timezone: { utc: data.timezone, current_time: getTimeForTimezone(data.timezone) },
+        postal: data.postal,
+        latitude: data.latitude,
+        longitude: data.longitude,
+        type: data.type,
+        calling_code: data.country_phone,
+        connection: { asn: data.asn, org: data.org, isp: data.isp }
+    };
+}
+
+function normalizeIpapiCo(data) {
+    return {
+        ip: data.ip,
+        flag: { emoji: getCountryFlag(data.country_code) },
+        country: data.country_name,
+        city: data.city,
+        region: data.region,
+        country_code: data.country_code,
+        continent: continentNames[data.continent_code] || '—',
+        continent_code: data.continent_code,
+        timezone: { utc: data.timezone, current_time: getTimeForTimezone(data.timezone) },
+        postal: data.postal,
+        latitude: data.latitude,
+        longitude: data.longitude,
+        type: data.version,
+        calling_code: data.country_calling_code,
+        connection: { asn: data.asn, org: data.org, isp: data.org }
+    };
+}
+
+function normalizeIpapiIs(data) {
+    const countryCode = data.location?.country_code;
+    return {
+        ip: data.ip,
+        flag: { emoji: getCountryFlag(countryCode) },
+        country: data.location?.country,
+        city: data.location?.city,
+        region: data.location?.state,
+        country_code: countryCode,
+        continent: continentNames[data.location?.continent_code] || '—',
+        continent_code: data.location?.continent_code,
+        timezone: { utc: data.location?.timezone, current_time: getTimeForTimezone(data.location?.timezone) },
+        postal: data.location?.zip,
+        latitude: data.location?.latitude,
+        longitude: data.location?.longitude,
+        type: data.is_ipv6 ? 'IPv6' : 'IPv4',
+        calling_code: data.location?.calling_code,
+        connection: { asn: data.asn?.asn, org: data.company?.name, isp: data.company?.name }
+    };
+}
+
+async function fetchGeoWithFallback(ip) {
+    const providers = [
+        {
+            name: 'ipwhois.app',
+            request: () => fetchJson(`https://ipwhois.app/json/${ip}`),
+            isError: (data) => data?.success === false,
+            normalize: normalizeIpwhoisApp,
+            includeSecurity: false
+        },
+        {
+            name: 'ipapi.co',
+            request: () => fetchJson(`https://ipapi.co/${ip}/json/`),
+            isError: (data) => Boolean(data?.error),
+            normalize: normalizeIpapiCo,
+            includeSecurity: false
+        },
+        {
+            name: 'api.ipapi.is',
+            request: () => fetchJson(`https://api.ipapi.is/?q=${ip}`),
+            isError: (data) => !data?.ip,
+            normalize: normalizeIpapiIs,
+            includeSecurity: true
+        }
+    ];
+
+    for (const provider of providers) {
+        try {
+            const rawData = await provider.request();
+            if (provider.isError(rawData)) {
+                continue;
+            }
+
+            return {
+                provider: provider.name,
+                geoData: provider.normalize(rawData),
+                securityData: provider.includeSecurity ? rawData : null
+            };
+        } catch {
+            continue;
+        }
+    }
+
+    throw new Error('No available geo provider');
+}
+
 async function fetchIP(ip) {
     const requestId = ++activeRequestId;
     hideError();
     setLoading(true);
 
     try {
-        const [resp1, resp2] = await Promise.all([
-            fetch(`https://ipwho.is/${ip}`),
-            fetch(`https://api.ipapi.is/?q=${ip}`)
-        ]);
-
-        if (!resp1.ok || !resp2.ok) {
-            throw new Error('API error');
-        }
-
-        const data1 = await resp1.json();
-        const data2 = await resp2.json();
+        const { geoData, securityData } = await fetchGeoWithFallback(ip);
 
         if (requestId !== activeRequestId) {
             return;
         }
 
-        if (!data1.success) {
-            showError('Невалидный IP-адрес');
+        let resolvedSecurity = securityData;
+        if (!resolvedSecurity) {
+            const securityResult = await fetchJson(`https://api.ipapi.is/?q=${ip}`).catch(() => ({}));
+            resolvedSecurity = securityResult;
+        }
+
+        if (requestId !== activeRequestId) {
             return;
         }
 
-        displayResults(data1, data2);
+        displayResults(geoData, resolvedSecurity || {});
     } catch {
         if (requestId !== activeRequestId) {
             return;
         }
-        showError('Ошибка при получении данных. Проверьте IP-адрес.');
+
+        showError('Не удалось получить данные по IP. Попробуйте другой адрес.');
     } finally {
         if (requestId === activeRequestId) {
             setLoading(false);
@@ -112,42 +262,33 @@ async function fetchIP(ip) {
 }
 
 function displayResults(data1, data2) {
-    // Main info
     elements.mainIp.textContent = data1.ip || '—';
     elements.countryFlag.textContent = data1.flag?.emoji || '🌐';
     elements.countryName.textContent = data1.country || '—';
     elements.cityInfo.textContent = [data1.city, data1.region].filter(Boolean).join(', ') || '—';
     elements.countryCode.textContent = data1.country_code || '—';
 
-    // Geography
     elements.continent.textContent = data1.continent || '—';
     elements.continentCode.textContent = data1.continent_code || '—';
     elements.timezone.textContent = data1.timezone?.utc || '—';
-    elements.currentTime.textContent = data1.timezone?.current_time?.split('T')[1]?.slice(0, 5) || '—';
+    elements.currentTime.textContent = data1.timezone?.current_time || '—';
     elements.postal.textContent = data1.postal || 'N/A';
 
-    // Coordinates
     const lat = typeof data1.latitude === 'number' ? data1.latitude.toFixed(4) : '—';
     const lon = typeof data1.longitude === 'number' ? data1.longitude.toFixed(4) : '—';
     elements.coords.textContent = `${lat}°, ${lon}°`;
 
-    // IP Type
     elements.ipType.textContent = data1.type || '—';
-    elements.typeStatus.textContent = data1.success ? 'Валидный' : 'Невалидный';
+    elements.typeStatus.textContent = data1.ip ? 'Валидный' : 'Невалидный';
 
-    // Calling code
-    elements.callingCode.textContent = data1.calling_code ? `+${data1.calling_code}` : '—';
+    elements.callingCode.textContent = data1.calling_code || '—';
 
-    // Network
     elements.asn.textContent = data1.connection?.asn || data2.asn?.asn || '—';
     elements.org.textContent = data1.connection?.org || data2.company?.name || '—';
-    elements.domain.textContent = data1.connection?.domain || data2.company?.domain || '—';
-    elements.isp.textContent = data1.connection?.isp || 'N/A';
+    elements.domain.textContent = data2.company?.domain || '—';
+    elements.isp.textContent = data1.connection?.isp || data2.company?.name || 'N/A';
 
-    // Security badges
     displaySecurityInfo(data2);
-
-    // Show results
     elements.results.classList.add('show');
 }
 
@@ -187,7 +328,6 @@ function handleSearch(ip) {
     fetchIP(ip);
 }
 
-// Event listeners
 elements.searchForm.addEventListener('submit', (event) => {
     event.preventDefault();
     handleSearch(elements.ipInput.value.trim());
@@ -198,13 +338,13 @@ elements.myIpBtn.addEventListener('click', async () => {
     setLoading(true);
 
     try {
-        const response = await fetch('https://ipwho.is/');
-        const data = await response.json();
-        if (!data?.ip) {
+        const data = await fetchGeoWithFallback('');
+        if (!data?.geoData?.ip) {
             throw new Error('IP not found');
         }
-        elements.ipInput.value = data.ip;
-        await fetchIP(data.ip);
+
+        elements.ipInput.value = data.geoData.ip;
+        await fetchIP(data.geoData.ip);
     } catch {
         showError('Ошибка при определении вашего IP');
     } finally {
@@ -212,7 +352,6 @@ elements.myIpBtn.addEventListener('click', async () => {
     }
 });
 
-// Load user's IP on page load
 window.addEventListener('load', () => {
     elements.myIpBtn.click();
 });
