@@ -58,7 +58,7 @@ ip-heimdall/
 - Адаптивный дизайн (mobile-first)
 
 **script.js** (функциональность)
-- Интеграция с несколькими API (ipwhois.app, ipapi.co, api.ipapi.is)
+- Интеграция с несколькими API (api.ipapi.is, ipwho.is)
 - Валидация IP-адресов
 - Обработка ошибок
 - Динамическое обновление DOM
@@ -69,16 +69,15 @@ ip-heimdall/
 
 Приложение использует несколько бесплатных API для отказоустойчивости и получения полной информации:
 
-1. **ipwhois.app**
-   - Геолокация, часовой пояс, информация о стране и сети
-
-2. **ipapi.co**
-   - Резервный источник геолокации и сетевых данных
-
-3. **api.ipapi.is**
+1. **api.ipapi.is**
+   - Основной источник геолокации и сетевых данных
    - Расширенные сведения о безопасности (VPN, Proxy, Tor)
    - Информация о типе подключения
    - Данные об организации и абузе
+
+2. **ipwho.is**
+   - Резервный источник геолокации и сетевых данных
+   - Используется как fallback при ошибках/лимитах основного API
 
 ---
 
@@ -168,9 +167,8 @@ MIT License - Свободен для использования и модифи
 
 - **GitHub**: https://github.com/ddarkover/ip-heimdall
 - **GitHub Pages**: https://ddarkover.github.io/ip-heimdall/
-- **ipwhois.app API**: https://ipwhois.app/
-- **ipapi.co API**: https://ipapi.co/
 - **ipapi.is API**: https://api.ipapi.is/
+- **ipwho.is API**: https://ipwho.is/
 
 ---
 
