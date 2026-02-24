@@ -8,20 +8,32 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+    <div class="page-glow" aria-hidden="true"></div>
     <div class="container">
-        <!-- Header -->
-        <header>
+        <header class="hero">
             <div class="logo">
-                <div class="logo-icon">👁️</div>
+                <div class="logo-icon" aria-hidden="true">
+                    <svg viewBox="0 0 64 64" role="img">
+                        <defs>
+                            <linearGradient id="irisGradient" x1="0" y1="0" x2="1" y2="1">
+                                <stop offset="0%" stop-color="#d4f1ff" />
+                                <stop offset="100%" stop-color="#7cd8ff" />
+                            </linearGradient>
+                        </defs>
+                        <path d="M6 32c6.5-10 16-16 26-16s19.5 6 26 16c-6.5 10-16 16-26 16S12.5 42 6 32Z" fill="none" stroke="#eaf7ff" stroke-width="4" stroke-linejoin="round"/>
+                        <circle cx="32" cy="32" r="10" fill="url(#irisGradient)"/>
+                        <circle cx="32" cy="32" r="4" fill="#0f2742"/>
+                    </svg>
+                </div>
                 <div>
                     <h1>IP HEIMDALL</h1>
-                    <p class="subtitle">Определитель IP-адресов и геолокации</p>
+                    <p class="subtitle">Точный поиск IP-адресов и геолокации</p>
                 </div>
             </div>
+            <p class="hero-description">Проверяйте IP в реальном времени, чтобы узнать локацию, сеть и риски безопасности в одном интерфейсе.</p>
         </header>
 
-        <!-- Search Section -->
-        <div class="search-section">
+        <section class="search-section">
             <form class="search-box" id="searchForm" novalidate>
                 <label class="sr-only" for="ipInput">IP-адрес</label>
                 <input
@@ -29,20 +41,19 @@
                     id="ipInput"
                     autocomplete="off"
                     spellcheck="false"
-                    placeholder="Введите IP-адрес (например: 91.224.74.173)"
+                    placeholder="Введите IPv4 или IPv6 (например: 91.224.74.173)"
                 >
                 <button type="submit" class="btn-primary" id="searchBtn">Найти</button>
                 <button type="button" class="btn-secondary" id="myIpBtn">Мой IP</button>
             </form>
             <div class="error" id="errorMsg" role="alert" aria-live="polite"></div>
             <div class="spinner" id="spinner" aria-live="polite"></div>
-        </div>
+        </section>
 
-        <!-- Results -->
         <div class="results" id="results" aria-live="polite">
-            <!-- Main Card -->
             <div class="main-card">
                 <div class="main-info">
+                    <p class="eyebrow">Результат анализа</p>
                     <h2 id="mainIp">—</h2>
                     <div class="location-info">
                         <div class="flag" id="countryFlag">🌐</div>
@@ -55,50 +66,11 @@
                 </div>
             </div>
 
-            <!-- Geography Grid -->
             <div class="grid">
-                <div class="card">
-                    <div class="card-title">📍 Континент</div>
-                    <div class="card-value" id="continent">—</div>
-                    <div class="card-subtext" id="continentCode">—</div>
-                </div>
-                <div class="card">
-                    <div class="card-title">🕐 Часовой пояс</div>
-                    <div class="card-value" id="timezone">—</div>
-                    <div class="card-subtext" id="currentTime">—</div>
-                </div>
-                <div class="card">
-                    <div class="card-title">📮 Почтовый индекс</div>
-                    <div class="card-value" id="postal">—</div>
-                    <div class="card-subtext">ZIP код</div>
-                </div>
-            </div>
-
-            <!-- Coordinates & Network -->
-            <div class="grid">
-                <div class="card">
-                    <div class="card-title">🗺️ Координаты</div>
-                    <div class="card-value" id="coords">—</div>
-                    <div class="card-subtext">Широта, долгота</div>
-                </div>
                 <div class="card">
                     <div class="card-title">🌐 Тип IP</div>
                     <div class="card-value" id="ipType">—</div>
                     <div class="card-subtext" id="typeStatus">—</div>
-                </div>
-                <div class="card">
-                    <div class="card-title">☎️ Код страны</div>
-                    <div class="card-value" id="callingCode">—</div>
-                    <div class="card-subtext">Международный код</div>
-                </div>
-            </div>
-
-            <!-- Network Info -->
-            <div class="grid">
-                <div class="card">
-                    <div class="card-title">🔗 ASN</div>
-                    <div class="card-value" id="asn">—</div>
-                    <div class="card-subtext">Автономная система</div>
                 </div>
                 <div class="card">
                     <div class="card-title">🏢 Организация</div>
@@ -112,10 +84,45 @@
                 </div>
             </div>
 
-            <!-- Security Info -->
-            <div class="card">
+            <div class="grid">
+                <div class="card">
+                    <div class="card-title">🔗 ASN</div>
+                    <div class="card-value" id="asn">—</div>
+                    <div class="card-subtext">Автономная система</div>
+                </div>
+                <div class="card">
+                    <div class="card-title">🕐 Часовой пояс</div>
+                    <div class="card-value" id="timezone">—</div>
+                    <div class="card-subtext" id="currentTime">—</div>
+                </div>
+                <div class="card">
+                    <div class="card-title">🗺️ Координаты</div>
+                    <div class="card-value" id="coords">—</div>
+                    <div class="card-subtext">Широта, долгота</div>
+                </div>
+            </div>
+
+            <div class="grid">
+                <div class="card">
+                    <div class="card-title">🏙️ Регион</div>
+                    <div class="card-value" id="region">—</div>
+                    <div class="card-subtext" id="regionCountry">—</div>
+                </div>
+                <div class="card">
+                    <div class="card-title">☎️ Код страны</div>
+                    <div class="card-value" id="callingCode">—</div>
+                    <div class="card-subtext">Международный код</div>
+                </div>
+                <div class="card">
+                    <div class="card-title">📮 Почтовый индекс</div>
+                    <div class="card-value" id="postal">—</div>
+                    <div class="card-subtext">ZIP код</div>
+                </div>
+            </div>
+
+            <div class="card security-card">
                 <div class="card-title">🔒 Информация безопасности</div>
-                <div id="securityBadges" style="margin-top: 10px;"></div>
+                <div id="securityBadges" class="badges-row"></div>
             </div>
         </div>
     </div>
