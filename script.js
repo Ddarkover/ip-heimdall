@@ -11,8 +11,8 @@ const elements = {
     countryName: document.getElementById('countryName'),
     cityInfo: document.getElementById('cityInfo'),
     countryCode: document.getElementById('countryCode'),
-    continent: document.getElementById('continent'),
-    continentCode: document.getElementById('continentCode'),
+    region: document.getElementById('region'),
+    regionCountry: document.getElementById('regionCountry'),
     timezone: document.getElementById('timezone'),
     currentTime: document.getElementById('currentTime'),
     postal: document.getElementById('postal'),
@@ -269,8 +269,8 @@ function displayResults(data1, data2) {
     elements.cityInfo.textContent = [data1.city, data1.region].filter(Boolean).join(', ') || '—';
     elements.countryCode.textContent = data1.country_code || '—';
 
-    elements.continent.textContent = data1.continent || '—';
-    elements.continentCode.textContent = data1.continent_code || '—';
+    elements.region.textContent = data1.region || data1.city || '—';
+    elements.regionCountry.textContent = data1.country || '—';
     elements.timezone.textContent = data1.timezone?.utc || '—';
     elements.currentTime.textContent = data1.timezone?.current_time || '—';
     elements.postal.textContent = data1.postal || 'N/A';

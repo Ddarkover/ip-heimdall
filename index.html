@@ -12,7 +12,19 @@
     <div class="container">
         <header class="hero">
             <div class="logo">
-                <div class="logo-icon">👁️</div>
+                <div class="logo-icon" aria-hidden="true">
+                    <svg viewBox="0 0 64 64" role="img">
+                        <defs>
+                            <linearGradient id="irisGradient" x1="0" y1="0" x2="1" y2="1">
+                                <stop offset="0%" stop-color="#d4f1ff" />
+                                <stop offset="100%" stop-color="#7cd8ff" />
+                            </linearGradient>
+                        </defs>
+                        <path d="M6 32c6.5-10 16-16 26-16s19.5 6 26 16c-6.5 10-16 16-26 16S12.5 42 6 32Z" fill="none" stroke="#eaf7ff" stroke-width="4" stroke-linejoin="round"/>
+                        <circle cx="32" cy="32" r="10" fill="url(#irisGradient)"/>
+                        <circle cx="32" cy="32" r="4" fill="#0f2742"/>
+                    </svg>
+                </div>
                 <div>
                     <h1>IP HEIMDALL</h1>
                     <p class="subtitle">Точный поиск IP-адресов и геолокации</p>
@@ -56,45 +68,9 @@
 
             <div class="grid">
                 <div class="card">
-                    <div class="card-title">📍 Континент</div>
-                    <div class="card-value" id="continent">—</div>
-                    <div class="card-subtext" id="continentCode">—</div>
-                </div>
-                <div class="card">
-                    <div class="card-title">🕐 Часовой пояс</div>
-                    <div class="card-value" id="timezone">—</div>
-                    <div class="card-subtext" id="currentTime">—</div>
-                </div>
-                <div class="card">
-                    <div class="card-title">📮 Почтовый индекс</div>
-                    <div class="card-value" id="postal">—</div>
-                    <div class="card-subtext">ZIP код</div>
-                </div>
-            </div>
-
-            <div class="grid">
-                <div class="card">
-                    <div class="card-title">🗺️ Координаты</div>
-                    <div class="card-value" id="coords">—</div>
-                    <div class="card-subtext">Широта, долгота</div>
-                </div>
-                <div class="card">
                     <div class="card-title">🌐 Тип IP</div>
                     <div class="card-value" id="ipType">—</div>
                     <div class="card-subtext" id="typeStatus">—</div>
-                </div>
-                <div class="card">
-                    <div class="card-title">☎️ Код страны</div>
-                    <div class="card-value" id="callingCode">—</div>
-                    <div class="card-subtext">Международный код</div>
-                </div>
-            </div>
-
-            <div class="grid">
-                <div class="card">
-                    <div class="card-title">🔗 ASN</div>
-                    <div class="card-value" id="asn">—</div>
-                    <div class="card-subtext">Автономная система</div>
                 </div>
                 <div class="card">
                     <div class="card-title">🏢 Организация</div>
@@ -105,6 +81,42 @@
                     <div class="card-title">📡 ISP</div>
                     <div class="card-value" id="isp">—</div>
                     <div class="card-subtext">Интернет провайдер</div>
+                </div>
+            </div>
+
+            <div class="grid">
+                <div class="card">
+                    <div class="card-title">🔗 ASN</div>
+                    <div class="card-value" id="asn">—</div>
+                    <div class="card-subtext">Автономная система</div>
+                </div>
+                <div class="card">
+                    <div class="card-title">🕐 Часовой пояс</div>
+                    <div class="card-value" id="timezone">—</div>
+                    <div class="card-subtext" id="currentTime">—</div>
+                </div>
+                <div class="card">
+                    <div class="card-title">🗺️ Координаты</div>
+                    <div class="card-value" id="coords">—</div>
+                    <div class="card-subtext">Широта, долгота</div>
+                </div>
+            </div>
+
+            <div class="grid">
+                <div class="card">
+                    <div class="card-title">🏙️ Регион</div>
+                    <div class="card-value" id="region">—</div>
+                    <div class="card-subtext" id="regionCountry">—</div>
+                </div>
+                <div class="card">
+                    <div class="card-title">☎️ Код страны</div>
+                    <div class="card-value" id="callingCode">—</div>
+                    <div class="card-subtext">Международный код</div>
+                </div>
+                <div class="card">
+                    <div class="card-title">📮 Почтовый индекс</div>
+                    <div class="card-value" id="postal">—</div>
+                    <div class="card-subtext">ZIP код</div>
                 </div>
             </div>
 
