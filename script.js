@@ -113,50 +113,12 @@ function getTimeForTimezone(timezone) {
 async function fetchJson(url) {
     const response = await fetch(url);
     if (!response.ok) {
-        throw new Error(`Request failed: ${response.status}`);
+        const error = new Error(`Request failed: ${response.status}`);
+        error.status = response.status;
+        throw error;
     }
 
     return response.json();
-}
-
-function normalizeIpwhoisApp(data) {
-    return {
-        ip: data.ip,
-        flag: { emoji: data.country_flag_emoji || getCountryFlag(data.country_code) },
-        country: data.country,
-        city: data.city,
-        region: data.region,
-        country_code: data.country_code,
-        continent: data.continent,
-        continent_code: data.continent_code,
-        timezone: { utc: data.timezone, current_time: getTimeForTimezone(data.timezone) },
-        postal: data.postal,
-        latitude: data.latitude,
-        longitude: data.longitude,
-        type: data.type,
-        calling_code: data.country_phone,
-        connection: { asn: data.asn, org: data.org, isp: data.isp }
-    };
-}
-
-function normalizeIpapiCo(data) {
-    return {
-        ip: data.ip,
-        flag: { emoji: getCountryFlag(data.country_code) },
-        country: data.country_name,
-        city: data.city,
-        region: data.region,
-        country_code: data.country_code,
-        continent: continentNames[data.continent_code] || '—',
-        continent_code: data.continent_code,
-        timezone: { utc: data.timezone, current_time: getTimeForTimezone(data.timezone) },
-        postal: data.postal,
-        latitude: data.latitude,
-        longitude: data.longitude,
-        type: data.version,
-        calling_code: data.country_calling_code,
-        connection: { asn: data.asn, org: data.org, isp: data.org }
-    };
 }
 
 function normalizeIpapiIs(data) {
@@ -180,28 +142,67 @@ function normalizeIpapiIs(data) {
     };
 }
 
+function normalizeIpwhoIs(data) {
+    return {
+        ip: data.ip,
+        flag: { emoji: getCountryFlag(data.country_code) },
+        country: data.country,
+        city: data.city,
+        region: data.region,
+        country_code: data.country_code,
+        continent: data.continent,
+        continent_code: data.continent_code,
+        timezone: { utc: data.timezone?.id, current_time: data.timezone?.current_time || getTimeForTimezone(data.timezone?.id) },
+        postal: data.postal,
+        latitude: data.latitude,
+        longitude: data.longitude,
+        type: data.type,
+        calling_code: data.calling_code,
+        connection: {
+            asn: data.connection?.asn,
+            org: data.connection?.org,
+            isp: data.connection?.isp
+        }
+    };
+}
+
+function wait(ms) {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function fetchIpapiIs(ip) {
+    const query = ip ? `?q=${encodeURIComponent(ip)}` : '';
+
+    for (let attempt = 1; attempt <= 3; attempt += 1) {
+        try {
+            return await fetchJson(`https://api.ipapi.is/${query}`);
+        } catch (error) {
+            const isLastAttempt = attempt === 3;
+            if (error?.status === 429 && !isLastAttempt) {
+                await wait(250 * attempt);
+                continue;
+            }
+
+            throw error;
+        }
+    }
+}
+
 async function fetchGeoWithFallback(ip) {
     const providers = [
         {
-            name: 'ipwhois.app',
-            request: () => fetchJson(`https://ipwhois.app/json/${ip}`),
-            isError: (data) => data?.success === false,
-            normalize: normalizeIpwhoisApp,
-            includeSecurity: false
-        },
-        {
-            name: 'ipapi.co',
-            request: () => fetchJson(`https://ipapi.co/${ip}/json/`),
-            isError: (data) => Boolean(data?.error),
-            normalize: normalizeIpapiCo,
-            includeSecurity: false
-        },
-        {
             name: 'api.ipapi.is',
-            request: () => fetchJson(`https://api.ipapi.is/?q=${ip}`),
+            request: () => fetchIpapiIs(ip),
             isError: (data) => !data?.ip,
             normalize: normalizeIpapiIs,
             includeSecurity: true
+        },
+        {
+            name: 'ipwho.is',
+            request: () => fetchJson(`https://ipwho.is/${ip}`),
+            isError: (data) => data?.success === false || !data?.ip,
+            normalize: normalizeIpwhoIs,
+            includeSecurity: false
         }
     ];
 
@@ -239,7 +240,7 @@ async function fetchIP(ip) {
 
         let resolvedSecurity = securityData;
         if (!resolvedSecurity) {
-            const securityResult = await fetchJson(`https://api.ipapi.is/?q=${ip}`).catch(() => ({}));
+            const securityResult = await fetchIpapiIs(ip).catch(() => ({}));
             resolvedSecurity = securityResult;
         }
 
