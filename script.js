@@ -38,6 +38,8 @@ const continentNames = {
 };
 
 let activeRequestId = 0;
+const lookupCache = new Map();
+const prefersReducedData = navigator.connection?.saveData || ['slow-2g', '2g'].includes(navigator.connection?.effectiveType);
 
 function isValidIPv4(ip) {
     const parts = ip.split('.');
@@ -111,14 +113,21 @@ function getTimeForTimezone(timezone) {
 }
 
 async function fetchJson(url) {
-    const response = await fetch(url);
-    if (!response.ok) {
-        const error = new Error(`Request failed: ${response.status}`);
-        error.status = response.status;
-        throw error;
-    }
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000);
 
-    return response.json();
+    try {
+        const response = await fetch(url, { signal: controller.signal });
+        if (!response.ok) {
+            const error = new Error(`Request failed: ${response.status}`);
+            error.status = response.status;
+            throw error;
+        }
+
+        return response.json();
+    } finally {
+        clearTimeout(timeoutId);
+    }
 }
 
 function normalizeIpapiIs(data) {
@@ -226,29 +235,46 @@ async function fetchGeoWithFallback(ip) {
     throw new Error('No available geo provider');
 }
 
+async function resolveLookup(ip) {
+    const cacheKey = ip || '__self__';
+    if (lookupCache.has(cacheKey)) {
+        return lookupCache.get(cacheKey);
+    }
+
+    const lookupPromise = fetchGeoWithFallback(ip);
+    lookupCache.set(cacheKey, lookupPromise);
+
+    try {
+        return await lookupPromise;
+    } catch (error) {
+        lookupCache.delete(cacheKey);
+        throw error;
+    }
+}
+
+async function hydrateResults(lookup) {
+    let resolvedSecurity = lookup.securityData;
+
+    if (!resolvedSecurity && lookup.geoData?.ip) {
+        resolvedSecurity = await fetchIpapiIs(lookup.geoData.ip).catch(() => ({}));
+    }
+
+    displayResults(lookup.geoData, resolvedSecurity || {});
+}
+
 async function fetchIP(ip) {
     const requestId = ++activeRequestId;
     hideError();
     setLoading(true);
 
     try {
-        const { geoData, securityData } = await fetchGeoWithFallback(ip);
+        const lookup = await resolveLookup(ip);
 
         if (requestId !== activeRequestId) {
             return;
         }
 
-        let resolvedSecurity = securityData;
-        if (!resolvedSecurity) {
-            const securityResult = await fetchIpapiIs(ip).catch(() => ({}));
-            resolvedSecurity = securityResult;
-        }
-
-        if (requestId !== activeRequestId) {
-            return;
-        }
-
-        displayResults(geoData, resolvedSecurity || {});
+        await hydrateResults(lookup);
     } catch {
         if (requestId !== activeRequestId) {
             return;
@@ -305,14 +331,17 @@ function displaySecurityInfo(data) {
         { label: 'Abuser', value: data?.is_abuser, type: data?.is_abuser ? 'danger' : 'yes' }
     ];
 
-    elements.securityBadges.innerHTML = '';
+    const fragment = document.createDocumentFragment();
+    elements.securityBadges.textContent = '';
 
     badges.forEach((badge) => {
         const span = document.createElement('span');
         span.className = `badge badge-${badge.value ? (badge.type === 'yes' ? 'yes' : badge.type) : 'no'}`;
         span.textContent = `${badge.label}: ${badge.value ? 'Yes' : 'No'}`;
-        elements.securityBadges.appendChild(span);
+        fragment.appendChild(span);
     });
+
+    elements.securityBadges.appendChild(fragment);
 }
 
 function handleSearch(ip) {
@@ -335,24 +364,47 @@ elements.searchForm.addEventListener('submit', (event) => {
 });
 
 elements.myIpBtn.addEventListener('click', async () => {
+    const requestId = ++activeRequestId;
     hideError();
     setLoading(true);
 
     try {
-        const data = await fetchGeoWithFallback('');
-        if (!data?.geoData?.ip) {
-            throw new Error('IP not found');
+        const lookup = await resolveLookup('');
+
+        if (requestId !== activeRequestId || !lookup?.geoData?.ip) {
+            return;
         }
 
-        elements.ipInput.value = data.geoData.ip;
-        await fetchIP(data.geoData.ip);
+        elements.ipInput.value = lookup.geoData.ip;
+        await hydrateResults(lookup);
     } catch {
-        showError('Ошибка при определении вашего IP');
+        if (requestId === activeRequestId) {
+            showError('Ошибка при определении вашего IP');
+        }
     } finally {
-        setLoading(false);
+        if (requestId === activeRequestId) {
+            setLoading(false);
+        }
     }
 });
 
 window.addEventListener('load', () => {
-    elements.myIpBtn.click();
+    if (prefersReducedData) {
+        return;
+    }
+
+    const scheduleLookup = () => {
+        if (elements.ipInput.value.trim() || elements.results.classList.contains('show')) {
+            return;
+        }
+
+        elements.myIpBtn.click();
+    };
+
+    if ('requestIdleCallback' in window) {
+        window.requestIdleCallback(scheduleLookup, { timeout: 1500 });
+        return;
+    }
+
+    window.setTimeout(scheduleLookup, 600);
 });

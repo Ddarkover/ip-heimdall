@@ -108,6 +108,7 @@ h1 {
     border-radius: var(--radius-lg);
     background: var(--surface);
     backdrop-filter: blur(12px);
+    contain: layout paint style;
 }
 
 .search-section {
@@ -165,8 +166,15 @@ button {
     border: 1px solid rgba(135, 170, 223, 0.4);
 }
 
-button:hover:not(:disabled) {
-    transform: translateY(-2px);
+@media (hover: hover) {
+    button:hover:not(:disabled) {
+        transform: translateY(-2px);
+    }
+
+    .card:hover {
+        transform: translateY(-3px);
+        border-color: rgba(86, 204, 242, 0.6);
+    }
 }
 
 button:disabled {
@@ -202,6 +210,8 @@ button:disabled {
 
 .results {
     display: none;
+    content-visibility: auto;
+    contain-intrinsic-size: 1px 1100px;
 }
 
 .results.show {
@@ -271,11 +281,6 @@ button:disabled {
     border-radius: var(--radius-md);
     padding: 18px;
     transition: 0.2s ease;
-}
-
-.card:hover {
-    transform: translateY(-3px);
-    border-color: rgba(86, 204, 242, 0.6);
 }
 
 .card-title {
@@ -361,5 +366,43 @@ button:disabled {
 
     .main-card {
         padding: 20px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+
+    .page-glow {
+        display: none;
+    }
+}
+
+@media (max-width: 820px), (pointer: coarse) {
+    body {
+        background: linear-gradient(160deg, #05070d 0%, #081223 55%, #050913 100%);
+    }
+
+    .page-glow {
+        display: none;
+    }
+
+    .search-section,
+    .main-card,
+    .card {
+        backdrop-filter: none;
+        box-shadow: none;
+    }
+
+    .logo-icon,
+    .btn-primary,
+    .main-card {
+        box-shadow: none;
     }
 }
